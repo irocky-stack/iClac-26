@@ -6,10 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="iCalc 26">
     <meta name="theme-color" content="#000000">
     <link rel="apple-touch-icon" href="https://i.ibb.co/Vc84fBqf/grok-image-xo6gt4m-1.jpg">
     <link rel="manifest" href="manifest.json">
-    <title>iCalc 26</title>
+    <title>iCalc 26 | Spatial Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -18,14 +19,21 @@
               fontFamily: {
                 sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', '"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
               },
+              animation: {
+                'ripple': 'ripple 0.6s linear',
+              },
+              keyframes: {
+                ripple: {
+                  '0%': { transform: 'scale(0)', opacity: '0.4' },
+                  '100%': { transform: 'scale(4)', opacity: '0' },
+                }
+              }
             },
           },
         }
     </script>
     <style>
-        :root {
-            --glass-blur: 24px;
-        }
+        :root { --glass-blur: 24px; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
             background-color: #000;
@@ -37,33 +45,40 @@
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
         }
-        #root {
-            height: 100%;
-        }
-        /* iOS-style Glassmorphism */
+        #root { height: 100%; }
         .glass-panel {
             background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(var(--glass-blur));
             -webkit-backdrop-filter: blur(var(--glass-blur));
             border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
-        ::-webkit-scrollbar {
-            display: none;
-        }
+        ::-webkit-scrollbar { display: none; }
+        * { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+        input { -webkit-user-select: auto; user-select: auto; }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "jspdf": "https://esm.sh/jspdf@^2.5.1"
-  }
-}
-</script>
+    <script type="importmap">
+    {
+      "imports": {
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "react": "https://esm.sh/react@^19.2.3",
+        "jspdf": "https://esm.sh/jspdf@^2.5.1",
+        "@google/genai": "https://esm.sh/@google/genai@^0.2.1"
+      }
+    }
+    </script>
 </head>
 <body>
     <div id="root"></div>
+    <script type="module" src="index.tsx"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Vision SW Active', reg.scope))
+                    .catch(err => console.error('SW Failed', err));
+            });
+        }
+    </script>
 </body>
 </html>
