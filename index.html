@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,11 +20,21 @@
               },
               animation: {
                 'ripple': 'ripple 0.6s linear',
+                'fade-in': 'fade-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                'insight-pop': 'insight-pop 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
               },
               keyframes: {
                 ripple: {
                   '0%': { transform: 'scale(0)', opacity: '0.4' },
                   '100%': { transform: 'scale(4)', opacity: '0' },
+                },
+                'fade-in': { 
+                  'from': { opacity: '0', transform: 'translateY(16px)' }, 
+                  'to': { opacity: '1', transform: 'translateY(0)' } 
+                },
+                'insight-pop': { 
+                  'from': { opacity: '0', transform: 'scale(0.9) translateY(60px)' }, 
+                  'to': { opacity: '1', transform: 'scale(1) translateY(0)' } 
                 }
               }
             },
@@ -54,7 +63,12 @@
         }
         ::-webkit-scrollbar { display: none; }
         * { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
-        input { -webkit-user-select: auto; user-select: auto; }
+        input, textarea { -webkit-user-select: auto; user-select: auto; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.25); border-radius: 30px; }
     </style>
     <script type="importmap">
     {
@@ -74,9 +88,14 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Vision SW Active', reg.scope))
-                    .catch(err => console.error('SW Failed', err));
+                const swPath = './sw.js';
+                navigator.serviceWorker.register(swPath)
+                    .then(reg => {
+                        console.log('iCalc 26 SW Registered. Scope:', reg.scope);
+                    })
+                    .catch(err => {
+                        console.warn('Service Worker registration skipped or failed. This is common in sandboxed IDEs or cross-origin previews.', err.message);
+                    });
             });
         }
     </script>

@@ -1,7 +1,7 @@
-
+// Fix: Changed import from './Calc' to './App' because App.tsx contains the actual default export for the application.
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './Calc';
+import App from './App';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

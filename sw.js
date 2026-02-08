@@ -1,44 +1,60 @@
-
-const CACHE_NAME = 'icalc-26-v2';
-const ASSETS = [
+// Fix: Updated the ASSETS_TO_CACHE list to include App.tsx and remove the unused Calc.tsx.
+const CACHE_NAME = 'icalc-26-v4';
+const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
   './index.tsx',
-  './App.tsx',
-  './constants.tsx',
-  './types.ts',
-  './Calc.tsx'
+  './App.tsx'
 ];
 
-self.addEventListener('install', (e) => {
+self.addEventListener('install', (event) => {
   self.skipWaiting();
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE);
+    })
   );
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => {
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
       );
     })
   );
 });
 
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((res) => {
-      return res || fetch(e.request).then((networkRes) => {
-        // Cache external assets like fonts/CDNs on the fly
-        if (e.request.url.includes('esm.sh') || e.request.url.includes('unsplash')) {
-          const resClone = networkRes.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(e.request, resClone));
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      if (response) {
+        return response;
+      }
+      return fetch(event.request).then((networkResponse) => {
+        const isTrustedSource = 
+          event.request.url.startsWith('https://esm.sh/') || 
+          event.request.url.startsWith('https://images.unsplash.com/') ||
+          event.request.url.startsWith('https://cdn.tailwindcss.com');
+
+        if (isTrustedSource) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
-        return networkRes;
+        return networkResponse;
       });
+    }).catch(() => {
+      // Offline support can be enhanced with a fallback page here
     })
   );
 });
