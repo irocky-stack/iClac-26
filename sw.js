@@ -5,11 +5,16 @@ const ASSETS_TO_CACHE = [
   './index.html',
   './manifest.json',
   './index.tsx',
-  './App.tsx'
+'./App.tsx',
+  './types.ts'
 ];
+
+// Check if running in development mode
+const isDev = self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
+  if (isDev) return; // Skip caching in dev
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
@@ -18,6 +23,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
+  if (isDev) return; // Skip cache cleanup in dev
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -33,6 +39,12 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  // In dev mode, always fetch from network
+  if (isDev) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((response) => {

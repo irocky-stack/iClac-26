@@ -12,12 +12,12 @@ const BlurredBackground: React.FC<BlurredBackgroundProps> = ({ isLight, wallpape
     if (wallpapers.length <= 1) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % wallpapers.length);
-    }, 5000);
+    }, 6000);
     return () => clearInterval(timer);
   }, [wallpapers]);
 
   return (
-    <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+    <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
       {wallpapers.map((slide, index) => (
         <div
           key={index}

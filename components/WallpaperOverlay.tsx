@@ -25,7 +25,7 @@ const WallpaperOverlay: React.FC<WallpaperOverlayProps> = ({ onEnter, isLight, a
   };
 
   return (
-    <div className={`fixed inset-0 z-[1000] flex flex-col items-center justify-between p-12 transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) ${isEntering ? 'opacity-0 scale-125 blur-3xl pointer-events-none' : 'opacity-100 scale-100'}`}>
+    <div className={`fixed inset-0 z-[1000] flex flex-col items-center justify-between p-12 transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) ${isEntering ? 'opacity-0 scale-125' : 'opacity-100 scale-100'}`}>
       <div className="flex flex-col items-center mt-20 select-none pointer-events-none">
         <p className="text-[12px] font-black uppercase tracking-[0.5em] opacity-40 mb-4" style={{ color: isLight ? '#000' : '#fff' }}>
           Spatial Hub

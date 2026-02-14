@@ -15,3 +15,15 @@ root.render(
     <App />
   </React.StrictMode>
 );
+
+// Register service worker only in production to avoid caching during development
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(new URL('./sw.js', import.meta.url))
+      .then(reg => console.log('iCalc SW registered. Scope:', reg.scope))
+      .catch(err => console.warn('iCalc SW registration failed:', err));
+  });
+} else {
+  // Helpful log during dev
+  console.log('Skipping service worker registration in development');
+}

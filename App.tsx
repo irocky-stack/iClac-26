@@ -6,8 +6,10 @@ import SettingsPanel from './components/SettingsPanel';
 import BlurredBackground from './components/BlurredBackground';
 import POSDashboard from './components/POSDashboard';
 import WallpaperOverlay from './components/WallpaperOverlay';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 import { Icons, THEMES, WALLPAPER_SLIDES } from './constants';
 import { HistoryItem } from './types';
+import { usePWAPrompt } from './hooks/usePWAPrompt';
 
 const App: React.FC = () => {
   const [expression, setExpression] = useState('0');
@@ -20,17 +22,28 @@ const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPOSOpen, setIsPOSOpen] = useState(false);
   
+  const touchStart = useRef<number | null>(null);
+  const touchEnd = useRef<number | null>(null);
+  
+  // PWA install prompt
+  const { showPrompt, handleInstall, handleDismiss } = usePWAPrompt();
+  
   const displayContentRef = useRef<HTMLDivElement>(null);
   const [displayFontSize, setDisplayFontSize] = useState(116.16); 
 
-  const [settings, setSettings] = useState({
-    accentColor: THEMES[0].color,
-    glassBlur: 24,
-    hapticFeedback: true,
-    hapticIntensity: 'medium' as 'soft' | 'medium' | 'intense',
-    themeMode: 'light' as 'light' | 'dark',
-    currency: 'GHS' as 'GHS' | 'USD' | 'EUR' | 'GBP' | 'JPY' | 'NGN',
-    customWallpapers: WALLPAPER_SLIDES
+  const [settings, setSettings] = useState(() => {
+    const defaults = {
+      accentColor: THEMES[0].color,
+      glassBlur: 24,
+      hapticFeedback: true,
+      hapticIntensity: 'medium' as 'soft' | 'medium' | 'intense',
+      themeMode: 'light' as 'light' | 'dark',
+      currency: 'GHS' as 'GHS' | 'USD' | 'EUR' | 'GBP' | 'JPY' | 'NGN',
+      customWallpapers: WALLPAPER_SLIDES,
+      uiScale: 1
+    };
+    const saved = localStorage.getItem('calc_settings');
+    return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
   });
 
   useLayoutEffect(() => {
@@ -48,9 +61,12 @@ const App: React.FC = () => {
   useEffect(() => {
     const savedHistory = localStorage.getItem('calc_history');
     if (savedHistory) setHistory(JSON.parse(savedHistory));
-    const savedSettings = localStorage.getItem('calc_settings');
-    if (savedSettings) setSettings(prev => ({ ...prev, ...JSON.parse(savedSettings) }));
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('calc_settings', JSON.stringify(settings));
+    document.documentElement.style.fontSize = `${(settings.uiScale || 1) * 100}%`;
+  }, [settings]);
 
   const triggerHaptic = (multiplier: number = 1) => {
     if (!settings.hapticFeedback || !('vibrate' in navigator)) return;
@@ -135,35 +151,67 @@ const App: React.FC = () => {
     return symbols[settings.currency] || val;
   };
 
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchEnd.current = null;
+    touchStart.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    touchEnd.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchEnd = () => {
+    if (touchStart.current === null || touchEnd.current === null) return;
+    const distance = touchStart.current - touchEnd.current;
+    const isLeftSwipe = distance > 50;
+    if (isLeftSwipe) setIsHistoryOpen(true);
+  };
+
   return (
-    <div className={`flex items-center justify-center min-h-screen transition-colors duration-200 overflow-hidden font-sans ${isLight ? 'bg-[#f2f2f7]' : 'bg-black'}`}>
+    <div className={`relative flex items-center justify-center h-[100dvh] w-full overflow-hidden font-sans transition-colors duration-200 ${isLight ? 'bg-[#f2f2f7]' : 'bg-black'}`}
+         onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
       <BlurredBackground isLight={isLight} wallpapers={settings.customWallpapers} />
 
       {!isUnlocked && (
         <WallpaperOverlay isLight={isLight} accentColor={settings.accentColor} onEnter={() => { triggerHaptic(2); setIsUnlocked(true); }} />
       )}
 
-      <div className={`fixed inset-0 flex items-center justify-center transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) ${isUnlocked ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}`}>
-        <div className={`relative w-full max-w-[430px] h-screen max-h-[932px] flex flex-col p-6 pb-12 rounded-[40px] transition-all duration-500 ${isLight ? 'bg-white/40 shadow-2xl text-black' : 'bg-white/10 shadow-2xl text-white'} backdrop-blur-[var(--glass-blur,24px)] ${isAnyModalOpen ? 'blur-xl opacity-40 scale-[0.92]' : 'opacity-100'}`}>
-          <div className="flex justify-end p-4 absolute top-4 left-0 right-0 z-50">
-            <button onClick={() => { setIsSettingsOpen(true); triggerHaptic(); }} className={`p-3 rounded-2xl ${isLight ? 'bg-black/5 hover:bg-black/10' : 'bg-white/10 hover:bg-white/20'}`}><Icons.Settings size={22} /></button>
+      <div className={`fixed inset-0 z-20 flex items-center justify-center transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) ${isUnlocked ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}`}>
+        <div
+          className={`relative w-[94%] h-[96%] sm:w-[90vw] sm:h-[90vh] max-w-[430px] max-h-[932px] flex flex-col rounded-[40px] overflow-hidden transition-all duration-500 ${isLight ? 'bg-white/40 shadow-2xl text-black' : 'bg-white/10 shadow-2xl text-white'} backdrop-blur-[var(--glass-blur,24px)] ${isAnyModalOpen ? 'blur-xl opacity-40 scale-[0.92]' : 'opacity-100'}`}
+          style={{
+            paddingTop: 'max(1rem, env(safe-area-inset-top))',
+            paddingRight: 'max(1rem, env(safe-area-inset-right))',
+            paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
+            paddingLeft: 'max(1rem, env(safe-area-inset-left))'
+          }}
+        >
+          <div className="absolute top-[1%] left-1/2 -translate-x-1/2 z-50">
+            <input 
+              type="text" 
+              placeholder="Search" 
+              className={`w-32 py-1.5 px-4 text-center text-sm rounded-full outline-none border transition-all ${isLight ? 'bg-white/60 border-black/5 focus:bg-white/80 text-black placeholder-black/30' : 'bg-black/20 border-white/10 focus:bg-black/40 text-white placeholder-white/30'}`}
+            />
+          </div>
+
+          <div className="flex justify-end p-4 absolute top-4 left-0 right-0 z-50 pointer-events-none">
+            <button onClick={() => { setIsSettingsOpen(true); triggerHaptic(); }} className={`pointer-events-auto p-3 rounded-2xl ${isLight ? 'bg-black/5 hover:bg-black/10' : 'bg-white/10 hover:bg-white/20'}`}><Icons.Settings size={22} /></button>
           </div>
           
-          <div className="flex-1 flex flex-col justify-end items-center py-4 px-4 overflow-hidden mb-2">
+          <div className="flex-1 flex flex-col justify-end items-center py-4 px-4 overflow-hidden min-h-0">
             <div ref={displayContentRef} style={{ fontSize: `${displayFontSize}px` }} className="font-light tracking-tighter break-all w-full text-center">
               {expression === '0' ? <span className="opacity-20">0</span> : expression}
             </div>
           </div>
 
-          <div className="flex justify-between gap-2 mb-4 p-1.5 rounded-[24px] bg-current/5">
+          <div className="flex-none flex justify-between gap-2 mb-2 px-4 mx-2 py-1.5 rounded-[24px] bg-current/5">
               <button onClick={handleUndo} className="flex-1 py-3 flex justify-center hover:bg-white/10 rounded-xl"><Icons.Undo size={18} /></button>
               <button onClick={handleRedo} className="flex-1 py-3 flex justify-center hover:bg-white/10 rounded-xl"><Icons.Redo size={18} /></button>
-              <button onClick={() => setIsHistoryOpen(true)} className="flex-1 py-3 flex justify-center hover:bg-white/10 rounded-xl"><Icons.History size={18} /></button>
               <button onClick={() => setIsPOSOpen(true)} className="flex-1 py-3 flex justify-center hover:bg-white/10 rounded-xl"><Icons.Trends size={18} /></button>
               <button onClick={() => { triggerHaptic(); setExpression(prev => prev.slice(0, -1) || '0'); }} className="flex-1 py-3 flex justify-center hover:bg-white/10 rounded-xl"><Icons.Delete size={18} /></button>
           </div>
 
-          <div className="h-[55%] grid grid-cols-4 gap-1">
+          <div className="flex-[1.3] grid grid-cols-4 grid-rows-5 gap-2 px-4 pb-4 min-h-0">
             <CalcButton label="AC" onClick={() => setExpression('0')} variant="secondary" isLight={isLight} />
             <CalcButton label="+/-" onClick={() => {}} variant="secondary" isLight={isLight} />
             <CalcButton label="%" onClick={() => inputChar('%')} variant="secondary" isLight={isLight} />
@@ -188,6 +236,7 @@ const App: React.FC = () => {
       <HistoryPanel history={history} isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} onClear={() => setHistory([])} onSelect={(i) => { setExpression(i.result); setIsHistoryOpen(false); }} isLight={isLight} />
       <SettingsPanel isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} settings={settings} updateSettings={(k, v) => setSettings(p => ({ ...p, [k]: v }))} />
       <POSDashboard history={history} isOpen={isPOSOpen} onClose={() => setIsPOSOpen(false)} isLight={isLight} accentColor={settings.accentColor} formatCurrency={formatCurrency} updateSettings={(k, v) => setSettings(p => ({ ...p, [k]: v }))} />
+      <PWAInstallPrompt showPrompt={showPrompt} onInstall={handleInstall} onDismiss={handleDismiss} />
     </div>
   );
 };

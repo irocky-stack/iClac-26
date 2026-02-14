@@ -23,6 +23,21 @@ export const WALLPAPER_SLIDES = [
     image: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=2564&auto=format&fit=crop',
     header: 'Precision Refined',
     subHeader: 'Advanced math logic meets uncompromising aesthetics.'
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1579546929662-711aa33e6b6f?q=80&w=2564&auto=format&fit=crop',
+    header: 'Digital Canvas',
+    subHeader: 'Colors that inspire and dimensions that innovate.'
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=2564&auto=format&fit=crop',
+    header: 'Seamless Integration',
+    subHeader: 'Where technology and artistry converge.'
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=2564&auto=format&fit=crop',
+    header: 'Evolution',
+    subHeader: 'The next generation of computational excellence.'
   }
 ];
 
@@ -63,5 +78,9 @@ export const Icons = {
   // Added missing Delete icon to fix error in App.tsx line 141
   Delete: ({ size = 18 }: IconProps) => (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+  ),
+  // Download icon for PWA install prompt
+  Download: ({ size = 20 }: IconProps) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
   )
 };
